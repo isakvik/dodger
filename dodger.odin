@@ -44,35 +44,6 @@ write_sliders :: proc(b: ^strings.Builder) {
 }
 
 
-current_time := f64(300)
-current_beat := 0
-current_beat_16ths := 0
-
-beat_len :: 416.666666667
-
-osu_time :: proc() -> int { return int(math.round_f64(current_time)) }
-
-advance_time :: proc(snap_divisor: int) -> int {
-    time_before := osu_time()
-    advance := f64(beat_len) / f64(snap_divisor)
-    current_time += advance
-
-    current_beat_16ths = (current_beat_16ths + snap_divisor / 16) % 16
-
-    return osu_time() - time_before
-}
-
-advance_to_next :: proc(snap_divisor: int) -> int {
-    if current_beat_16ths == 0 { current_beat_16ths = 16 }
-
-    cum := 0
-    for current_beat_16ths > 0 {
-        cum += advance_time(16)
-    }
-    return cum
-}
-
-
 node_buf: [65536]SliderNode
 node_count := 0
 
@@ -84,7 +55,8 @@ greenline_count := 0
 
 
 //out_file_path :: "C:\\Users\\Isak\\AppData\\Local\\Temp\\befa01dfbc9a7298efcf0da6b23156960117d84c7250197c5eac85ab70cd3950\\Manabu Namiki - On the Verge of Madness [data].osu"
-out_file_path :: "F:\\osu!\\Songs\\Manabu Namiki - On the Verge of Madness (Stage 5)\\Manabu Namiki - On the Verge of Madness (Guest) [data].osu"
+//out_file_path :: "F:\\osu!\\Songs\\Manabu Namiki - On the Verge of Madness (Stage 5)\\Manabu Namiki - On the Verge of Madness (Guest) [data].osu"
+out_file_path :: "C:\\Users\\Isak\\AppData\\Local\\osu!\\Songs\\Manabu Namiki - On the Verge of Madness\\Manabu Namiki - On the Verge of Madness (Guest) [data].osu"
 
 
 main :: proc() {
