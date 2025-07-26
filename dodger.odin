@@ -21,11 +21,25 @@ write_sliders :: proc(b: ^strings.Builder) {
 
     for s in 0..<slider_count {
         slider := slider_buf[s]
+        time := slider.time
+
+        if slider.length < 10 { continue; }
+
+        if slider.reversed {
+            rev := reversed_buf[slider.reversedGroup]
+
+            duration := f64(slider.length) / (rev.velocity * 100 * map_velocity) * beat_len
+            time = slider.time + int(math.round_f64(rev.longestSliderDuration - duration) - rev.longestSliderDuration)
+
+            fmt.println(pf_to[0] - pf_from[0])
+            fmt.println(pf_to[1] - pf_from[1])
+        }
+
 
         fmt.sbprintf(b, "{},{},{},2,0,{}",
-                slider.pos.x,
-                slider.pos.y,
-                slider.time,
+                int(math.round_f64(slider.pos[0])),
+                int(math.round_f64(slider.pos[1])),
+                time,
                 "L|")
 
         for n in 0..<slider.nodeCount {
@@ -34,15 +48,32 @@ write_sliders :: proc(b: ^strings.Builder) {
             }
 
             node := node_buf[slider.firstNodeIndex + n]
-            write_int(b, node.pos.x)
+            write_int(b, int(math.round_f64(node.pos[0])))
             write_rune(b, ':')
-            write_int(b, node.pos.y)
+            write_int(b, int(math.round_f64(node.pos[1])))
         }
 
         fmt.sbprintfln(b, ",1,{}", slider.length)
     }
 }
 
+write_circles :: proc(b: ^strings.Builder) {
+    using strings
+
+    for c in 0..<circle_count {
+
+        circle := circle_buf[c]
+
+        fmt.sbprintfln(b, "{},{},{},1,0,0:0:0:0",
+                       int(math.round_f64(circle.pos[0])),
+                       int(math.round_f64(circle.pos[1])),
+                       circle.time)
+    }
+}
+
+
+reversed_buf: [65536]ReversedSliderGroup
+reversed_count := 0
 
 node_buf: [65536]SliderNode
 node_count := 0
@@ -50,13 +81,16 @@ node_count := 0
 slider_buf: [65536]Slider
 slider_count := 0
 
+circle_buf: [65536]Circle
+circle_count := 0
+
 greenline_buf: [4096]GreenLine
 greenline_count := 0
 
 
-//out_file_path :: "C:\\Users\\Isak\\AppData\\Local\\Temp\\befa01dfbc9a7298efcf0da6b23156960117d84c7250197c5eac85ab70cd3950\\Manabu Namiki - On the Verge of Madness [data].osu"
-//out_file_path :: "F:\\osu!\\Songs\\Manabu Namiki - On the Verge of Madness (Stage 5)\\Manabu Namiki - On the Verge of Madness (Guest) [data].osu"
-out_file_path :: "C:\\Users\\Isak\\AppData\\Local\\osu!\\Songs\\Manabu Namiki - On the Verge of Madness\\Manabu Namiki - On the Verge of Madness (Guest) [data].osu"
+//out_file_path :: "C:\\Users\\Isak\\AppData\\Local\\Temp\\6efc6f4df8e45e725bd2836fb351b1b413d18dbf164b6a1e0c5d757002bec9bc\\Manabu Namiki - On the Verge of Madness [data].osu"
+out_file_path :: "F:\\osu!\\Songs\\Manabu Namiki - On the Verge of Madness (Stage 5)\\Manabu Namiki - On the Verge of Madness (Guest) [data].osu"
+//out_file_path :: "C:\\Users\\Isak\\AppData\\Local\\osu!\\Songs\\Manabu Namiki - On the Verge of Madness\\Manabu Namiki - On the Verge of Madness (Guest) [data].osu"
 
 
 main :: proc() {
@@ -88,6 +122,7 @@ main :: proc() {
 
         b = builder_make_len_cap(0, 2*1024*1024)
 
+        write_circles(&b)
         write_sliders(&b)
         fmt.println(to_string(b))
 
