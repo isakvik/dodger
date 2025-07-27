@@ -1,14 +1,14 @@
 // raddbg 0.9.19 project file
 
 recent_file: path: "map.odin"
-breakpoint:
-{
-  source_location: "map.odin:368:1"
-  hit_count: 1
-}
 target:
 {
   executable: "dodger.exe"
   working_directory: ""
   enabled: 1
+}
+breakpoint:
+{
+  source_location: "map.odin:282:1"
+  hit_count: 1
 }

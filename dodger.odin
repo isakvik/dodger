@@ -89,9 +89,9 @@ greenline_count := 0
 
 
 //out_file_path :: "C:\\Users\\Isak\\AppData\\Local\\Temp\\6efc6f4df8e45e725bd2836fb351b1b413d18dbf164b6a1e0c5d757002bec9bc\\Manabu Namiki - On the Verge of Madness [data].osu"
-out_file_path :: "F:\\osu!\\Songs\\Manabu Namiki - On the Verge of Madness (Stage 5)\\Manabu Namiki - On the Verge of Madness (Guest) [data].osu"
 //out_file_path :: "C:\\Users\\Isak\\AppData\\Local\\osu!\\Songs\\Manabu Namiki - On the Verge of Madness\\Manabu Namiki - On the Verge of Madness (Guest) [data].osu"
 
+out_file_path :: "F:\\osu!\\Songs\\Manabu Namiki - On the Verge of Madness (Stage 5)\\Manabu Namiki - On the Verge of Madness (-GN) [LOWEST SCORE WINS].osu"
 
 main :: proc() {
     out_handle, err := os.open(out_file_path, os.O_CREATE | os.O_TRUNC)
@@ -117,6 +117,8 @@ main :: proc() {
         fmt.println(to_string(b))
 
         append_osu(out_handle, to_string(b))
+
+        append_osu(out_handle, "\n\n[Colours]\nCombo1 : 255,0,255\nCombo2 : 255,0,255")
 
         append_osu(out_handle, "\n\n[HitObjects]\n")
 

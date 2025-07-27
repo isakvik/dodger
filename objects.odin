@@ -87,6 +87,8 @@ Circle :: struct {
 }
 
 circle_add :: proc(pos: [2]f64) {
+    if true { return } // this is buggy lol
+
     circle := &circle_buf[circle_count]
     circle.pos = pos
     circle.time = osu_time()
@@ -222,6 +224,11 @@ slider_from_angle :: proc(start_pt: [2]f64, angle_rad: f64) {
     assert(found)
 }
 
+slider_from_angle_duration :: proc(start_pt: [2]f64, angle_rad, duration: f64) {
+    dist := unit_circle(angle_rad) * duration
+    slider_from_to(start_pt, start_pt + dist)
+}
+
 
 //////////////////////////////////////////////////////
 // time handling
@@ -263,4 +270,29 @@ advance_to_next :: proc(snap_divisor: int) -> int {
         cum += advance_snap(16)
     }
     return cum
+}
+
+
+to_set_time := f64(0)
+to_set_beat_16ths := 0
+to_set_unbeated_time_ms := 0
+
+set_guard := 0
+
+set_times :: proc() {
+    assert(set_guard == 0)
+    set_guard = 1
+
+    to_set_time = current_time
+    to_set_beat_16ths = current_beat_16ths
+    to_set_unbeated_time_ms = unbeated_time_ms
+}
+
+reset_times :: proc() {
+    assert(set_guard == 1)
+    set_guard = 0
+
+    current_time = to_set_time
+    current_beat_16ths = to_set_beat_16ths
+    unbeated_time_ms = to_set_unbeated_time_ms
 }

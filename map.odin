@@ -8,20 +8,20 @@ import "core:math/rand"
 //////////////////////////////////////////////////////
 // utils
 
-//pf_from :: vec2{-172, -48}
-//pf_to :: vec2{684, 420}
+//pf_from :: [2]f64{-172, -48}
+//pf_to :: [2]f64{684, 420}
 
 
 map_velocity :: f64(2)
-circle_radius :: f64(54.4 - 4.48 * 4.0)
+circle_radius :: f64(54.4 - 4.48 * 3.0)
 
-//pf_from :: [2]f64{-circle_radius,-circle_radius}
-//pf_to :: [2]f64{512+circle_radius,384+circle_radius}
-//global_sv_multiplier :: 0.598*1.1775
+pf_from :: [2]f64{-circle_radius,-circle_radius}
+pf_to :: [2]f64{512+circle_radius,384+circle_radius}
+global_sv_multiplier :: 0.598*(1.1775)
 
-pf_from :: [2]f64{0,0}
-pf_to :: [2]f64{512,384}
-global_sv_multiplier :: 0.598
+//pf_from :: [2]f64{0,0}
+//pf_to :: [2]f64{512,384}
+//global_sv_multiplier :: 0.598
 
 pf_center :: [2]f64{pf_to[0]/2+pf_from[0]/2,pf_to[1]/2+pf_from[1]/2}
 
@@ -137,7 +137,7 @@ spellcard_2 :: proc() {
         if v % 2 == 0 && v < 28 {
             advance_snap(2)
             greenline_add(0.4)
-            circle(center, angle_right + rng_f64(0,angle_full), 7)
+            circle(center, angle_right + rng_f64(0,angle_full), 6)
             advance_time(2)
             greenline_add(1)
             advance_snap(2)
@@ -260,7 +260,6 @@ ellipse :: proc(pt: [2]f64, angle, long_speed, short_speed: f64, num: int) {
         angle_speed := sqrt(pow(x,2) + pow(y,2))
 
         greenline_add(angle_speed)
-        fmt.println(angle_speed)
 
         slider_from_angle(pt, t)
         slider_from_angle(pt, t + angle_left)
@@ -272,6 +271,46 @@ ellipse :: proc(pt: [2]f64, angle, long_speed, short_speed: f64, num: int) {
     //assert(false)
 }
 
+square_radius :: proc(t: f64) -> f64 {
+    using math
+    val := min(1/abs(cos(t)), 1/abs(sin(t)))
+    return val;
+}
+
+keiki :: proc(pt: [2]f64, angle, speed: f64, num: int) {
+    using math
+
+    linear_factor := 1 / f64(num/8)
+    val := f64(0)
+
+    t := f64(0)
+
+    for v in 0 ..< num / 4 {
+        i := f64(v)
+
+        used_speed := speed * square_radius(t)
+        greenline_add(used_speed)
+
+        for s in 0..<4 {
+            slider_from_angle(pt, angle + t + angle_quarter * f64(s))
+        }
+
+        val += v < num / 8 ? linear_factor : -linear_factor
+
+        // what the fuck is going on
+        l := 0.592
+        it_angle := (angle_full / f64(num/2))
+        t += v == 0 || v == 3 ? it_angle * l : it_angle * (1 - l)
+
+        advance_time(8)
+    }
+
+}
+
+
+angle_half := angle_left
+angle_quarter := angle_down
+angle_eighth := angle_down/2
 
 //////////////////////////////////////////////////////
 // map
@@ -280,32 +319,35 @@ map_create :: proc() {
 
     intro()
 
-    circle_add(center)
-    greenline_add(1.1)
+    {
 
-    i := f64(0)
-    snap := 4
-    for v in 0..<60 {
-        ellipse(center, to_rad(i * 7), 1.2, 0.9,  4)
-        advance_snap(snap)
+        circle_add(center)
+        greenline_add(1.1)
 
-        if v < snap*2*2 {
-            i += 1
-        }
-        else if v < snap*2*4 {
-            i -= 1
-        }
-        else if v < snap*2*5-1 {
-            i += 2
-        }
-        else if v < snap*2*6-1 {
-            i -= 3
-        }
-        else if v < snap*2*7-1 {
-            i -= 5
-        }
-        else if v < snap*2*8-1 {
-            i += 4
+        i := f64(0)
+        snap := 4
+        for v in 0..<60 {
+            ellipse(center, to_rad(i * 7), 1.2, 0.9,  4)
+            advance_snap(snap)
+
+            if v < snap*2*2 {
+                i += 1
+            }
+            else if v < snap*2*4 {
+                i -= 1
+            }
+            else if v < snap*2*5-1 {
+                i += 2
+            }
+            else if v < snap*2*6-1 {
+                i -= 3
+            }
+            else if v < snap*2*7-1 {
+                i -= 5
+            }
+            else if v < snap*2*8-1 {
+                i += 4
+            }
         }
     }
 
@@ -411,18 +453,15 @@ map_create :: proc() {
 
     spellcard_2()
 
+    start_pattern()
+
     advance_snap(-1)
     greenline_add(1.5)
 
     {
         wait := 20
-        
-        shotgun(bottom_right, angle_up_left, 0, 1, 3)
-        advance_time(1)
-        greenline_add(1.5)
 
         for i in 0..<4 {
-
             wall_from_wait(bottom_left, angle_right, angle_up, pf_to[1] / (2*5), 6, wait)
             advance_snap(1)
             wall_from_wait(top_right, angle_left, angle_down, pf_to[1] / (2*5), 6, wait)
@@ -430,35 +469,343 @@ map_create :: proc() {
         }
 
         for i in 0..<4 {
-            greenline_add(1.0)
-            slider_from_angle({ pf_to[0] * 0.6, 0 }, angle_down)
-            slider_from_angle({ pf_to[0] * 0.4, pf_to[1] }, angle_up)
-            advance_time(1)
-            greenline_add(1.5)
-
-            greenline_add(1.5)
             wall_from_wait(top_left, angle_right, angle_down, pf_to[1] / (2*5), 6, wait)
-            advance_snap(1)
+            advance_snap(2)
+
+            wall_from_wait({ pf_to[0] * 0.55, 0 }, angle_down, angle_right, pf_to[1] / (2*5), 7, wait)
+            advance_snap(2)
+
             wall_from_wait(bottom_right, angle_left, angle_up, pf_to[1] / (2*5), 6, wait)
+            advance_snap(2)
+
+            wall_from_wait({ pf_to[0]*0.45, pf_to[1] }, angle_up, angle_left, pf_to[1] / (2*5), 7, wait)
+            advance_snap(2)
+        }
+    }
+
+    swords_2()
+
+    start_pattern(2)
+
+    {
+        set_times()
+        it_pos := [2]f64{0, pf_to[1] / (72*2)}
+        p := it_pos * -15.5
+        for i in 0..<16 {
+            keiki(almost_middle_left + p, angle_full / 24 * f64(i) + to_rad(rng_f64(0,8)), 1 + 0.021*f64(i), 16)
+            p += it_pos
             advance_snap(1)
         }
+
+        reset_times()
+        advance_snap(1,16)
+
+        greenline_add(0.7)
+        circle(almost_middle_left + {20, 0}, rng_angle(), 23)
+    }
+
+    {
+        advance_snap(2)
+        greenline_add(0.01)
+
+        pos := [2]f64{-100, 0}
+
+        i := f64(0)
+
+        for pos[0] < pf_to[0] {
+
+            pos[0] += pf_to[0] / 48
+            pos[1] = math.cos(angle_full*i/24) * 75 + 100
+
+            angle_facing := -math.sin(angle_full*i/24)
+
+            slider_from_angle_duration(pos, angle_facing + to_rad(rng_f64(-10,10)), 120)
+            advance_snap(4)
+
+            if int(i) % 6 == 4 && (0 < pos[0] && pos[0] < pf_to[0]) {
+                advance_time(1)
+                greenline_add(1.2)
+                spread_shot(pos, angle_facing + to_rad(20), to_rad(150), 6)
+                advance_time(1)
+                greenline_add(0.01)
+            }
+
+            i += 1
+        }
+
+
+        advance_snap(-1, int(i/4))
+    }
+
+    {
+        advance_snap(1, 8)
+
+        greenline_add(0.01)
+
+        pos := [2]f64{-100, 0}
+
+        i := f64(0)
+
+        for pos[0] < pf_to[0] {
+
+            pos[0] += pf_to[0] / 48
+            pos[1] = math.cos(angle_full*i/24 + 3) * 75 + 300
+
+            angle_facing := -math.sin(angle_full*i/24 + 3)
+
+            slider_from_angle_duration(pos, angle_facing + to_rad(rng_f64(-10,10)), 120)
+            advance_snap(4)
+
+            if int(i) % 6 == 0 && (0 < pos[0] && pos[0] < pf_to[0]) {
+                advance_time(1)
+                greenline_add(1.2)
+                spread_shot(pos, angle_facing - to_rad(20), to_rad(150), 6)
+                advance_time(1)
+                greenline_add(0.01)
+            }
+
+            i += 1
+        }
+
+        advance_snap(-1, int(i/4))
+    }
+
+    {
+        advance_snap(1, 12)
+        advance_snap(2)
+        greenline_add(0.01)
+
+        pos := [2]f64{-100, 0}
+
+        i := f64(0)
+
+        for pos[0] < pf_to[0] {
+
+            pos[0] += pf_to[0] / 24
+            pos[1] = math.cos(angle_full*i/16+1) * 75 + 100
+
+            angle_facing := -math.sin(angle_full*i/16+1)
+
+            slider_from_angle_duration(pos, angle_facing + to_rad(rng_f64(-10,10)), 120)
+            advance_snap(4)
+
+            if int(i) % 5 == 0 && (0 < pos[0] && pos[0] < pf_to[0]) {
+                advance_time(1)
+                greenline_add(1.2)
+                spread_shot(pos, angle_facing + to_rad(20), to_rad(150), 6)
+                advance_time(1)
+                greenline_add(0.01)
+            }
+
+            i += 1
+        }
+
+        advance_snap(-1, int(i/8))
+    }
+
+    {
+        advance_snap(1)
+
+        greenline_add(0.02)
+
+        pos := [2]f64{-100, 0}
+
+        i := f64(0)
+
+        for pos[0] < pf_to[0] {
+
+            pos[0] += pf_to[0] / 24
+            pos[1] = math.cos(angle_full*i/12 + 2) * 75 + 300
+
+            angle_facing := -math.sin(angle_full*i/12 + 2)
+
+            slider_from_angle_duration(pos, angle_facing + to_rad(rng_f64(-10,10)), 60)
+            advance_snap(8)
+            advance_snap(16)
+
+            i += 1
+        }
+    }
+
+    advance_snap(-1)
+    advance_snap(4)
+    advance_snap(16)
+
+    greenline_add(0.8)
+
+    {
+        set_times()
+
+        weee(almost_bottom_left, rng_angle(), 0, 3)
+        weee(almost_bottom_left, rng_angle(), 0, 3)
+        weee(almost_bottom_left, rng_angle(), 0, 4)
+        weee(almost_bottom_left, rng_angle(), 0, 4)
+
+        reset_times()
+
+        advance_snap(1)
+
+        weee(almost_top_left, rng_angle(), 1, 3)
+        weee(almost_top_left, rng_angle(), 1, 3)
+        weee(almost_top_left, rng_angle(), 1, 4)
+        weee(almost_top_left, rng_angle(), 1, 4)
+
+        set_times()
+
+        weee(almost_bottom_right, rng_angle(), 0, 4)
+        weee(almost_bottom_right, rng_angle(), 0, 4)
+        weee(almost_bottom_right, rng_angle(), 0, 5)
+        weee(almost_bottom_right, rng_angle(), 0, 5)
+        weee(almost_bottom_right, rng_angle(), 0, 6)
+        weee(almost_bottom_right, rng_angle(), 0, 6)
+
+        reset_times()
+
+        advance_snap(1)
+
+        weee(almost_top_right, rng_angle(), 1, 4)
+        weee(almost_top_right, rng_angle(), 1, 4)
+        weee(almost_top_right, rng_angle(), 1, 5)
+        weee(almost_top_right, rng_angle(), 1, 5)
+        weee(almost_top_right, rng_angle(), 1, 6)
+        weee(almost_top_right, rng_angle(), 1, 6)
+
+        weee :: proc(pos: [2]f64, angle: f64, dir, num: int) {
+            tnum := num - 1
+            t := angle
+            for v in 0..<tnum {
+                i := f64(v)
+                circle(pos, t, 12)
+
+                change := f64(40 * tnum)
+                t += dir == 0 ? angle_full / change : -angle_full / change
+
+                advance_snap(4)
+
+                if v == 9 { t = 0 }
+            }
+
+            advance_snap(4)
+            advance_snap(1, 1)
+            advance_snap(2, 1)
+        }
+    }
+
+    advance_snap(2, 1)
+    shotgun(almost_bottom_left, angle_up + to_rad(65), to_rad(140), 1.4, 15)
+    advance_snap(1, 2)
+    shotgun(almost_bottom_right, angle_up - to_rad(65), to_rad(140), 1.4, 15)
+    advance_snap(1, 2)
+    shotgun(almost_bottom_middle, angle_up, to_rad(180), 1.2, 10)
+
+    greenline_add(1.4)
+
+    t := f64(0)
+    deg := f64(4)
+
+    for v in 0..<48 {
+        i := f64(v)
+
+        circle(center, angle_up + t, 2)
+        advance_snap(4)
+        t -= to_rad(deg)
+
+        if v == 8 {
+            deg = 8
+            greenline_add(1.6)
+        }
+        if v == 15 {
+            deg = 12
+            advance_time(1)
+            greenline_add(0.5)
+            circle(center, 0, 8)
+            advance_time(1)
+            greenline_add(1.8)
+        }
+        if v == 20 {
+            deg = 20
+            greenline_add(2)
+        }
+        if v == 28 {
+            deg = 22
+        }
+        if v == 31 {
+            deg = 24
+            advance_time(1)
+            greenline_add(0.5)
+            circle(center, 0, 8)
+            advance_time(1)
+            greenline_add(2)
+        }
+
+    }
+
+    poses: [10][2]f64
+
+    for i in 0..<10 {
+        poses[i] = { pf_to[0] / 9 * f64(i), pf_to[1] }
+    }
+
+    set_times()
+    pog(bottom_left)
+    reset_times()
+    set_times()
+    pog(bottom_right)
+
+    pog :: proc(pos: [2]f64) {
+        greenline_add(1.2)
+        slider_from_angle(pos, angle_up); advance_snap(2)
+        slider_from_angle(pos, angle_up); advance_snap(2)
+        slider_from_angle(pos, angle_up); advance_snap(2)
+        slider_from_angle(pos, angle_up); advance_snap(2)
+        slider_from_angle(pos, angle_up); advance_snap(4)
+        slider_from_angle(pos, angle_up); advance_snap(4)
+        slider_from_angle(pos, angle_up); advance_snap(4)
+        slider_from_angle(pos, angle_up); advance_snap(4)
+        slider_from_angle(pos, angle_up); advance_snap(2)
+        slider_from_angle(pos, angle_up);
+    }
+
+    reset_times()
+    advance_snap(1)
+
+
+    artval := 3.11
+
+    slider_from_angle(artpos(130), angle_up);
+    slider_from_angle(artpos(322), angle_up);
+    advance_time(int(math.trunc_f64(artval*(118-86))))
+    slider_from_angle(artpos(94), angle_up);
+    slider_from_angle(artpos(167), angle_up);
+    slider_from_angle(artpos(286), angle_up);
+    slider_from_angle(artpos(359), angle_up);
+    advance_time(int(math.trunc_f64(artval*(229-118))))
+    slider_from_angle(artpos(429), angle_up);
+    advance_time(int(math.trunc_f64(artval*(40))))
+    slider_from_angle(artpos(429), angle_up);
+    advance_time(int(math.trunc_f64(artval*(40))))
+    slider_from_angle(artpos(392), angle_up);
+
+    artpos :: proc(xpos: f64) -> [2]f64 {
+        return { xpos / 512 * pf_to[0], pf_to[1] }
     }
 
 
 
+    // 2*circle_radius per beat (416.67)
+    // 72.96 osupixels per beat
+    // 0.17510398599 osupixels per ms
+    // 5.711ms per osupixel
+
 
     /* todos
 
-        eye pattern
-        outspiral - inspiral?
-        walls
-        sans (what did he mean by this?)
-        shotgun
-
         VVV shots
-        spiral super hexagon like, with random adds
 
         hitcircles som visual cue... kan fungere som introduksjon / ramp up
+
+        keiki patterns
+        dragon centipede
 
     */
 
@@ -745,3 +1092,104 @@ swords :: proc() {
         advance_snap(8,4)
     }
 }
+
+swords_2 :: proc() {
+
+    start_pattern(2)
+
+    for s in 0..<2 {
+        wao := f64(10)
+
+        for v in 0..<4 {
+            i := f64(v)
+            it_angle := to_rad(wao)
+            t := it_angle * i
+            shotgun_2(almost_bottom_left, (angle_right) - t, to_rad(10), 1.5, 0.8, 2)
+            advance_snap(8)
+        }
+        shotgun({100, pf_to[1] - 1,}, angle_up - to_rad(20), to_rad(40), 1.4, 5)
+
+        for v in 0..<4 {
+            i := f64(v)
+            it_angle := to_rad(-wao)
+            t := it_angle * i
+            shotgun_2(almost_bottom_left, (angle_right - to_rad(4 * wao)) - t, to_rad(10), 1.5, 0.8, 2)
+            advance_snap(8)
+        }
+
+        advance_snap(8,4)
+        shotgun_2(middle_left, angle_right, to_rad(0), 1, 0.6, 1)
+
+        advance_snap(2)
+
+        for v in 0..<4 {
+            i := f64(v)
+            it_angle := to_rad(wao)
+            t := it_angle * i
+            shotgun_2(almost_top_left, (angle_right) + t, to_rad(10), 1.5, 0.8, 2)
+            advance_snap(8)
+        }
+        shotgun({100, 1}, angle_down + to_rad(20), to_rad(40), 1.4, 5)
+
+        for v in 0..<4 {
+            i := f64(v)
+            it_angle := to_rad(-wao)
+            t := it_angle * i
+            shotgun_2(almost_top_left, (angle_right + to_rad(4 * wao)) + t, to_rad(10), 1.5, 0.8, 2)
+            advance_snap(8)
+        }
+
+        advance_snap(8,4)
+        shotgun_2(middle_left, angle_right, to_rad(0), 1, 0.6, 1)
+        advance_snap(2)
+    }
+
+    for s in 0..<2 {
+        wao := f64(10)
+
+        for v in 0..<4 {
+            i := f64(v)
+            it_angle := to_rad(wao)
+            t := it_angle * i
+            shotgun_2(almost_bottom_right, (angle_left) + t, to_rad(10), 1.5, 0.8, 2)
+            advance_snap(8)
+        }
+        shotgun({pf_to[0] - 100, pf_to[1] - 1,}, angle_up + to_rad(20), to_rad(40), 1.4, 5)
+
+        for v in 0..<4 {
+            i := f64(v)
+            it_angle := to_rad(-wao)
+            t := it_angle * i
+            shotgun_2(almost_bottom_right, (angle_left + to_rad(4 * wao)) + t, to_rad(10), 1.5, 0.8, 2)
+            advance_snap(8)
+        }
+
+        advance_snap(8,4)
+        shotgun_2(middle_right, angle_left, to_rad(0), 1, 0.6, 1)
+
+        advance_snap(2)
+
+        for v in 0..<4 {
+            i := f64(v)
+            it_angle := to_rad(wao)
+            t := it_angle * i
+            shotgun_2(almost_top_right, (angle_left) - t, to_rad(10), 1.5, 0.8, 2)
+            advance_snap(8)
+        }
+        shotgun({pf_to[0] - 100, 1}, angle_down - to_rad(20), to_rad(40), 1.4, 5)
+
+        for v in 0..<4 {
+            i := f64(v)
+            it_angle := to_rad(-wao)
+            t := it_angle * i
+            shotgun_2(almost_top_right, (angle_left - to_rad(4 * wao)) - t, to_rad(10), 1.5, 0.8, 2)
+            advance_snap(8)
+        }
+
+        advance_snap(8,4)
+        shotgun_2(middle_right, angle_left, to_rad(0), 1, 0.6, 1)
+        advance_snap(2)
+    }
+
+}
+

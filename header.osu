@@ -3,13 +3,14 @@ osu file format v14
 [General]
 AudioFilename: audio.mp3
 AudioLeadIn: 0
-PreviewTime: 263797
+PreviewTime: 126900
 Countdown: 0
 SampleSet: Normal
 StackLeniency: 0
 Mode: 0
 LetterboxInBreaks: 0
 WidescreenStoryboard: 1
+SkinPreference: yeast map x
 
 [Editor]
 DistanceSpacing: 1
@@ -22,16 +23,16 @@ Title:On the Verge of Madness
 TitleUnicode:On the Verge of Madness
 Artist:Manabu Namiki
 ArtistUnicode:Manabu Namiki
-Creator:Guest
-Version:data
+Creator:-GN
+Version:LOWEST SCORE WINS
 Source:
-Tags:
+Tags:YEAST2 cavoes osu event coe
 BeatmapID:0
 BeatmapSetID:-1
 
 [Difficulty]
 HPDrainRate:0
-CircleSize:4
+CircleSize:3
 OverallDifficulty:10
 ApproachRate:4
 SliderMultiplier:2
